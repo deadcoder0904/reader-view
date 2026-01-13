@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "off",
+    "pedantic": "off",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "rules": {
+    "eslint/no-await-in-loop": "off",
+    "typescript/no-unnecessary-type-assertion": "off",
+    "typescript/no-unsafe-type-assertion": "off"
+  }
+}

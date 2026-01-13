@@ -1,0 +1,47 @@
+{
+  "name": "reader-view",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run build:all && bun run zip:all",
+    "dev": "BROWSER=chrome bun run build:dev && BROWSER=chrome bun --watch scripts/build.ts",
+    "build:chrome": "BROWSER=chrome NODE_ENV=production bun run build:prod",
+    "dev:firefox": "BROWSER=firefox bun run build:dev && BROWSER=firefox bun --watch scripts/build.ts",
+    "build:firefox": "BROWSER=firefox NODE_ENV=production bun run build:prod",
+    "build:all": "bun run build:chrome && bun run build:firefox",
+    "build:dev": "bun run scripts/build.ts",
+    "build:prod": "NODE_ENV=production bun run scripts/build.ts",
+    "icons": "bun run scripts/generate-icons.ts",
+    "icons:check": "bun run scripts/generate-icons.ts --check",
+    "test": "bun test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "bun run typecheck && bun test",
+    "lint": "oxlint --type-aware .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "zip": "bun run scripts/zip.ts",
+    "zip:chrome": "BROWSER=chrome bun run scripts/zip.ts",
+    "zip:firefox": "BROWSER=firefox bun run scripts/zip.ts",
+    "zip:all": "bun run zip:chrome && bun run zip:firefox",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "defuddle": "^0.6.6",
+    "turndown": "^7.2.2",
+    "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "@types/bun": "^1.3.5",
+    "@types/jsdom": "^27.0.0",
+    "@types/webextension-polyfill": "^0.12.4",
+    "jsdom": "^27.4.0",
+    "oxfmt": "^0.24.0",
+    "oxlint": "^1.39.0",
+    "oxlint-tsgolint": "^0.11.0",
+    "rimraf": "^6.1.2",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
+  }
+}

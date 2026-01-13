@@ -1,0 +1,182 @@
+/* overlay.css (scoped via <link> inserted into Shadow DOM) */
+:host {
+  /* Default to dark (Vesper-inspired) */
+  --reader-bg: #101010;
+  --reader-fg: #e9e9e9;
+  --reader-muted: #bfbfbf;
+  --reader-link: #aca1cf;
+  --reader-accent: #e29eca;
+  --reader-code-bg: #141414;
+  --reader-border: #1e1e1e;
+
+  color-scheme: dark;
+  all: initial; /* keep page CSS out; Shadow DOM also helps */
+  font:
+    16px/1.65 ui-serif,
+    Georgia,
+    Cambria,
+    'Times New Roman',
+    Times,
+    serif;
+}
+
+/* Light theme (Snazzy Light-inspired) */
+:host([data-theme='light']) {
+  --reader-bg: #ffffff;
+  --reader-fg: #1b1f23;
+  --reader-muted: #6a737d;
+  --reader-link: #006dca;
+  --reader-accent: #ff5c57;
+  --reader-code-bg: #f6f8fa;
+  --reader-border: #e1e4e8;
+  color-scheme: light;
+}
+
+.reader-container {
+  background: var(--reader-bg);
+  color: var(--reader-fg);
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647; /* above everything */
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+  overflow: hidden;
+  /* Prevent scroll chaining to the page behind */
+  overscroll-behavior: contain;
+}
+
+.reader-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--reader-border);
+  padding: 10px 16px;
+  background: #0d0d0d;
+  position: sticky;
+  top: 0;
+}
+:host([data-theme='light']) .reader-toolbar {
+  background: #fcfcfc;
+}
+.reader-title {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reader-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.reader-actions button {
+  background: #171717;
+  color: var(--reader-fg);
+  border: 1px solid var(--reader-border);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+:host([data-theme='light']) .reader-actions button {
+  background: #ffffff;
+  color: var(--reader-fg);
+  border: 1px solid var(--reader-border);
+}
+.reader-actions .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 32px;
+  padding: 0;
+}
+.reader-actions .icon-btn svg {
+  display: block;
+}
+.reader-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+:host([data-theme='light']) .reader-actions button {
+  background: #ffffff;
+  color: var(--reader-fg);
+  border: 1px solid var(--reader-border);
+}
+.reader-actions button:hover {
+  border-color: var(--reader-accent);
+}
+
+.reader-article {
+  max-width: 68ch;
+  margin: 24px auto;
+  padding: 0 16px 48px;
+  word-wrap: break-word;
+}
+.reader-title-block h1 {
+  font-size: 2.2rem;
+  margin: 0.7em 0 0.3em;
+}
+.reader-title-block p {
+  margin: 0.5em 0;
+  color: var(--reader-muted);
+}
+.reader-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.reader-article a {
+  color: var(--reader-link);
+  text-decoration: underline;
+}
+.reader-article h1,
+.reader-article h2,
+.reader-article h3 {
+  line-height: 1.25;
+  margin: 1.2em 0 0.6em;
+  letter-spacing: 0.2px;
+}
+.reader-article p,
+.reader-article li {
+  margin: 0.8em 0;
+}
+.reader-article blockquote {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--reader-accent);
+  color: var(--reader-muted);
+}
+.reader-article pre,
+.reader-article code,
+.reader-article kbd,
+.reader-article samp {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+}
+.reader-article pre {
+  background: var(--reader-code-bg);
+  padding: 12px 14px;
+  border-radius: 8px;
+  overflow: auto;
+  border: 1px solid var(--reader-border);
+}
+.reader-article img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em auto;
+}
+.reader-article figure {
+  margin: 1em 0;
+}
+.reader-article hr {
+  border: 0;
+  border-top: 1px solid var(--reader-border);
+  margin: 1.5em 0;
+}
+.reader-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--reader-muted);
+}
