@@ -1,6 +1,7 @@
 // content/overlay.ts
 import Defuddle from 'defuddle'
 import { sanitizeArticle } from './reader-sanitize'
+import { getReaderStatsFromText } from './stats'
 
 declare const TurndownService: any
 declare const chrome: any
@@ -31,6 +32,14 @@ const SVG_MOON =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 0 1 11.21 3a7 7 0 1 0 9.79 9.79Z"/></svg>'
 const SVG_SUN =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0 4a1 1 0 0 1-1-1v-1.5a1 1 0 1 1 2 0V21a1 1 0 0 1-1 1Zm0-17.5a1 1 0 0 1-1-1V2a1 1 0 1 1 2 0v1.5a1 1 0 0 1-1 1ZM3 13a1 1 0 1 1 0-2h1.5a1 1 0 1 1 0 2H3Zm16.5 0a1 1 0 1 1 0-2H21a1 1 0 1 1 0 2h-1.5ZM5.05 19.95a1 1 0 0 1 0-1.41l1.06-1.06a1 1 0 1 1 1.41 1.41L6.46 19.95a1 1 0 0 1-1.41 0Zm11.02-11.02a1 1 0 0 1 0-1.41l1.06-1.06a1 1 0 1 1 1.41 1.41l-1.06 1.06a1 1 0 0 1-1.41 0Zm0 11.02 1.06-1.06a1 1 0 1 1 1.41 1.41l-1.06 1.06a1 1 0 1 1-1.41-1.41ZM5.05 4.05 6.11 3a1 1 0 1 1 1.41 1.41L6.46 5.46A1 1 0 1 1 5.05 4.05Z"/></svg>'
+const SVG_WORDS =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12"/><path d="M8 12h12"/><path d="M8 18h12"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>'
+const SVG_CHARS =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h14"/><path d="M5 15h14"/><path d="M9 5v14"/><path d="M15 5v14"/></svg>'
+const SVG_READ =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>'
+const SVG_SPEAK =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V5a3 3 0 0 1 3-3Z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>'
 
 const THEME_KEY = '__reader_theme'
 
@@ -44,9 +53,18 @@ const THEME_KEY = '__reader_theme'
 
   const { articleEl, meta, titleText } = buildArticle(container)
   if (articleEl) {
-    container.appendChild(buildTopBar({ titleText, meta, host, shadow, container, closeOverlay }))
+    container.appendChild(
+      buildTopBar({
+        titleText,
+        meta,
+        host,
+        shadow,
+        articleEl,
+        closeOverlay,
+      })
+    )
     const scroller = document.createElement('div')
-    scroller.className = 'reader-scroll'
+    scroller.className = 'reader-scroll overflow-auto overscroll-contain'
     scroller.appendChild(articleEl)
     container.appendChild(scroller)
   }
@@ -95,7 +113,8 @@ function createOverlayShell() {
   shadow.append(link)
 
   const container = document.createElement('div')
-  container.className = 'reader-container'
+  container.className =
+    'reader-container fixed inset-0 z-[2147483647] grid h-screen grid-rows-[auto_1fr] overflow-hidden bg-[var(--reader-bg)] text-[var(--reader-fg)]'
 
   return { host, shadow, container }
 }
@@ -132,7 +151,15 @@ function setupCloseBehavior(host: HTMLElement) {
   return closeOverlay
 }
 
-function mountOverlay({ host, shadow, container }: { host: HTMLElement; shadow: ShadowRoot; container: HTMLElement }) {
+function mountOverlay({
+  host,
+  shadow,
+  container,
+}: {
+  host: HTMLElement
+  shadow: ShadowRoot
+  container: HTMLElement
+}) {
   shadow.append(container)
   document.documentElement.appendChild(host)
 }
@@ -183,25 +210,37 @@ function buildTopBar({
   meta,
   host,
   shadow,
-  container,
+  articleEl,
   closeOverlay,
 }: {
   titleText: string
   meta: Meta
   host: HTMLElement
   shadow: ShadowRoot
-  container: HTMLElement
+  articleEl: HTMLElement
   closeOverlay: () => void
 }) {
+  const genMarkdown = createMarkdownGenerator(articleEl)
+  const statsText = genMarkdown()
+  const stats = getReaderStatsFromText(statsText)
   const bar = document.createElement('header')
-  bar.className = 'reader-toolbar'
+  bar.className =
+    'reader-toolbar sticky top-0 flex min-h-[52px] items-center gap-4 border-b border-[var(--reader-border)] bg-[var(--reader-toolbar-bg)] px-4 py-2 font-sans leading-none max-[760px]:flex-wrap max-[760px]:gap-y-3'
   bar.innerHTML = `
-      <div class="reader-title">${escapeHtml(titleText || '')}</div>
-      <div class="reader-actions">
-        <button id="reader-theme" class="icon-btn" title="Toggle theme" aria-label="Toggle theme"></button>
-        <button id="reader-copy"><span class="label">Copy Markdown</span></button>
-        <button id="reader-download"><span class="label">Download Markdown</span></button>
-        <button id="reader-close" aria-label="Close">×</button>
+      <div class="reader-metrics flex min-w-0 items-center gap-4 overflow-x-auto max-[980px]:gap-3" aria-label="Article statistics">
+        ${buildMetricItem(SVG_WORDS, formatNumber(stats.words), 'WORDS')}
+        <div class="reader-metric-divider h-5 w-px bg-[var(--reader-border)] opacity-80" aria-hidden="true"></div>
+        ${buildMetricItem(SVG_CHARS, formatNumber(stats.chars), 'CHARS')}
+        <div class="reader-metric-divider h-5 w-px bg-[var(--reader-border)] opacity-80" aria-hidden="true"></div>
+        ${buildMetricItem(SVG_READ, stats.readTime, 'READ')}
+        <div class="reader-metric-divider h-5 w-px bg-[var(--reader-border)] opacity-80" aria-hidden="true"></div>
+        ${buildMetricItem(SVG_SPEAK, stats.speakTime, 'SPEAK')}
+      </div>
+      <div class="reader-actions ml-auto flex items-center gap-2 max-[760px]:w-full max-[760px]:justify-end">
+        <button id="reader-theme" class="icon-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--reader-border)] bg-[var(--reader-btn-bg)] text-[var(--reader-fg)]" title="Toggle theme" aria-label="Toggle theme"></button>
+        <button id="reader-copy" class="inline-flex h-8 items-center gap-2 rounded-lg border border-[var(--reader-border)] bg-[var(--reader-btn-bg)] px-3 text-sm font-semibold leading-none text-[var(--reader-fg)] hover:border-[var(--reader-accent)]"><span class="label">Copy Markdown</span></button>
+        <button id="reader-download" class="inline-flex h-8 items-center gap-2 rounded-lg border border-[var(--reader-border)] bg-[var(--reader-btn-bg)] px-3 text-sm font-semibold leading-none text-[var(--reader-fg)] hover:border-[var(--reader-accent)]"><span class="label">Download Markdown</span></button>
+        <button id="reader-close" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--reader-border)] bg-[var(--reader-btn-bg)] text-[var(--reader-fg)]" aria-label="Close">×</button>
       </div>`
 
   const closeBtn = bar.querySelector<HTMLButtonElement>('#reader-close')!
@@ -224,8 +263,6 @@ function buildTopBar({
   })
 
   const titleName = safeName(meta.title || titleText) + '.md'
-  const genMarkdown = createMarkdownGenerator(container)
-
   const copyBtn = bar.querySelector<HTMLButtonElement>('#reader-copy')!
   const copyLabel = copyBtn.querySelector<HTMLElement>('.label')!
   const downloadBtn = bar.querySelector<HTMLButtonElement>('#reader-download')!
@@ -258,10 +295,8 @@ function buildTopBar({
   return bar
 }
 
-function createMarkdownGenerator(container: HTMLElement) {
+function createMarkdownGenerator(articleEl: HTMLElement) {
   return () => {
-    const articleNode = container.querySelector<HTMLElement>('.reader-article')
-    if (!articleNode) return ''
     try {
       const turndown = new TurndownService({
         headingStyle: 'atx',
@@ -269,7 +304,8 @@ function createMarkdownGenerator(container: HTMLElement) {
       })
       turndown.addRule('preCode', {
         filter: (node: Element) => node.nodeName === 'PRE' && !!node.querySelector('code'),
-        replacement: (_content: string, node: Element) => '```\n' + (node.textContent || '') + '\n```',
+        replacement: (_content: string, node: Element) =>
+          '```\n' + (node.textContent || '') + '\n```',
       })
       turndown.addRule('dropSmallLinks', {
         filter: (node: Element) =>
@@ -283,14 +319,32 @@ function createMarkdownGenerator(container: HTMLElement) {
           ),
         replacement: () => '',
       })
-      return turndown.turndown(articleNode)
+      return turndown.turndown(articleEl)
     } catch {
-      return (articleNode.textContent || '').trim()
+      return (articleEl.textContent || '').trim()
     }
   }
 }
 
-async function sendDownloadMessage(payload: { type: string; md: string; filename: string; title: string }) {
+function buildMetricItem(icon: string, value: string, label: string) {
+  return `
+    <div class="reader-metric inline-flex h-6 items-center gap-2">
+      <span class="reader-metric-icon inline-flex h-5 w-5 items-center justify-center rounded-md border border-[var(--reader-icon-border)] bg-[var(--reader-icon-bg)] text-[var(--reader-icon-fg)]" aria-hidden="true">${icon}</span>
+      <span class="reader-metric-value text-[0.95rem] font-semibold leading-none text-[var(--reader-fg)]">${escapeHtml(value)}</span>
+      <span class="reader-metric-label text-[10px] font-semibold leading-none tracking-[0.12em] text-[var(--reader-muted)] relative top-[1px] max-[980px]:hidden">${escapeHtml(label)}</span>
+    </div>`
+}
+
+function formatNumber(v: number) {
+  return v.toLocaleString()
+}
+
+async function sendDownloadMessage(payload: {
+  type: string
+  md: string
+  filename: string
+  title: string
+}) {
   try {
     const res = await new Promise<{ ok: boolean }>((resolve) => {
       try {

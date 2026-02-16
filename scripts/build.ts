@@ -114,6 +114,7 @@ async function runTailwind(input: string, output: string, prod: boolean) {
 
 async function css(env: ReturnType<typeof getBuildEnv>) {
   await runTailwind('src/styles/popup.css', path.join(env.DIST, 'styles/popup.css'), env.PROD)
+  await runTailwind('src/content/overlay.css', path.join(env.DIST, 'content/overlay.css'), env.PROD)
 }
 
 async function html(env: ReturnType<typeof getBuildEnv>) {
@@ -127,7 +128,6 @@ async function copyFile(src: string, dest: string) {
 
 async function assets(env: ReturnType<typeof getBuildEnv>) {
   await Promise.all([
-    copyFile('src/content/overlay.css', path.join(env.DIST, 'content/overlay.css')),
     copyFile('src/offscreen/offscreen.html', path.join(env.DIST, 'offscreen.html')),
   ])
 

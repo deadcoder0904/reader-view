@@ -1,3 +1,5 @@
+@import 'tailwindcss';
+
 /* overlay.css (scoped via <link> inserted into Shadow DOM) */
 :host {
   /* Default to dark (Vesper-inspired) */
@@ -8,6 +10,11 @@
   --reader-accent: #e29eca;
   --reader-code-bg: #141414;
   --reader-border: #1e1e1e;
+  --reader-toolbar-bg: linear-gradient(180deg, #0f1318, #0b0d11);
+  --reader-btn-bg: #171717;
+  --reader-icon-bg: color-mix(in oklab, var(--reader-accent) 14%, transparent);
+  --reader-icon-border: color-mix(in oklab, var(--reader-accent) 28%, transparent);
+  --reader-icon-fg: #d4d8dd;
 
   color-scheme: dark;
   all: initial; /* keep page CSS out; Shadow DOM also helps */
@@ -29,84 +36,12 @@
   --reader-accent: #ff5c57;
   --reader-code-bg: #f6f8fa;
   --reader-border: #e1e4e8;
+  --reader-toolbar-bg: linear-gradient(180deg, #ffffff, #f8fafc);
+  --reader-btn-bg: #ffffff;
+  --reader-icon-bg: color-mix(in oklab, var(--reader-accent) 12%, transparent);
+  --reader-icon-border: color-mix(in oklab, var(--reader-accent) 24%, transparent);
+  --reader-icon-fg: #27303a;
   color-scheme: light;
-}
-
-.reader-container {
-  background: var(--reader-bg);
-  color: var(--reader-fg);
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647; /* above everything */
-  display: grid;
-  grid-template-rows: auto 1fr;
-  height: 100vh;
-  overflow: hidden;
-  /* Prevent scroll chaining to the page behind */
-  overscroll-behavior: contain;
-}
-
-.reader-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--reader-border);
-  padding: 10px 16px;
-  background: #0d0d0d;
-  position: sticky;
-  top: 0;
-}
-:host([data-theme='light']) .reader-toolbar {
-  background: #fcfcfc;
-}
-.reader-title {
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.reader-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-}
-.reader-actions button {
-  background: #171717;
-  color: var(--reader-fg);
-  border: 1px solid var(--reader-border);
-  padding: 6px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-:host([data-theme='light']) .reader-actions button {
-  background: #ffffff;
-  color: var(--reader-fg);
-  border: 1px solid var(--reader-border);
-}
-.reader-actions .icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 32px;
-  padding: 0;
-}
-.reader-actions .icon-btn svg {
-  display: block;
-}
-.reader-actions button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-:host([data-theme='light']) .reader-actions button {
-  background: #ffffff;
-  color: var(--reader-fg);
-  border: 1px solid var(--reader-border);
-}
-.reader-actions button:hover {
-  border-color: var(--reader-accent);
 }
 
 .reader-article {
@@ -122,10 +57,6 @@
 .reader-title-block p {
   margin: 0.5em 0;
   color: var(--reader-muted);
-}
-.reader-scroll {
-  overflow: auto;
-  overscroll-behavior: contain;
 }
 .reader-article a {
   color: var(--reader-link);

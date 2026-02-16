@@ -5,5 +5,12 @@
   "semi": false,
   "singleQuote": true,
   "jsxSingleQuote": true,
-  "printWidth": 100
+  "printWidth": 100,
+  "experimentalTailwindcss": {
+    "stylesheet": "./src/styles/popup.css",
+    "attributes": ["class", "className"],
+    "functions": ["clsx", "cn"],
+    "preserveDuplicates": false,
+    "preserveWhitespace": false
+  }
 }
